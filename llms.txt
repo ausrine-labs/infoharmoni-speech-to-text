@@ -1,0 +1,44 @@
+# Infoharmoni speech-to-text (x402)
+
+> Pay-per-file speech-to-text for AI agents. Send an audio file, get the text back. Whisper large-v3-turbo on our own
+> machine. No account, no key, no subscription: you pay in USDC over x402, per second of audio.
+> This is machine transcription: it can be wrong. Nothing you send is kept.
+
+Base URL: https://vilijas-mac-mini.tailfe9c79.ts.net
+
+## Price
+
+- $0.0015 a minute, billed per second of decoded audio (a started second counts as a second): 25 USDC base units
+  a second, rounded up to a whole unit. Minimum charge $0.005 a file. Nothing else is added.
+- At most 60 minutes (3600 seconds) and 100000000 bytes (100 MB) a file.
+- dTelecom file STT: $0.002 a minute with prepaid credits (their price page, read 2026-11-19; their streaming STT is
+  $0.004 a minute). Ours: $0.0015 a minute with no credits. This service is batch only, paid per file.
+- You are told the exact price, free, before you pay. Refusals are free.
+
+## Flow
+
+1. POST https://vilijas-mac-mini.tailfe9c79.ts.net/v1/transcribe/quote with the audio (multipart field `file`, or the raw bytes, or JSON {"url": "https://..."}).
+   Free. Returns quote_id, duration_seconds, billable_seconds, price.
+2. POST https://vilijas-mac-mini.tailfe9c79.ts.net/v1/transcribe?quote=<quote_id> with the same file (or url). Answers 402 with exactly the quoted price.
+   Pay with any x402 client; the same request then returns the text. Optional: &language=lt (default: auto-detect).
+
+## Endpoints
+
+- POST /v1/transcribe/quote  free   file or url in; duration, price and quote id out
+- POST /v1/transcribe        paid   402 at the quoted price; then text, language, duration_seconds, words_per_minute
+- GET  /health               free
+- GET  /stats                free   offered, attempted, settled, audio seconds and minutes, distinct visitors
+- GET  /llms.txt             free   this page
+- GET  /docs.md              free   the full reference
+
+## Rules
+
+- The request stays open until the text is ready: about duration / 8 for English, duration / 15 for Lithuanian (measured on our machine,
+  not a promise), plus any queue wait. Set a client timeout of at least 15 minutes for a long file.
+- One job runs at a time; up to 3 wait. When the queue is full you get 503 with Retry-After, free, before any payment.
+- A quote lasts 15 minutes and is used once. The file you send in step 2 must be byte for byte the one you quoted.
+- Languages: auto, or a whisper code such as en, lt, de, fr, es, pl, ru, uk, lv, et. Full list in /docs.md.
+- Audio and text are deleted when the answer is sent. Nothing is logged but counts.
+- Every answer says it is machine transcription (machine_transcription: true, and a notice).
+
+See https://vilijas-mac-mini.tailfe9c79.ts.net/docs.md for the full reference.

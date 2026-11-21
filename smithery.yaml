@@ -1,0 +1,9 @@
+# Smithery: the Infoharmoni Speech-to-Text MCP server runs locally over stdio, installed straight from its repository.
+# (Standard library only; it never holds or asks for a private key.)
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    properties: {}
+  commandFunction: |-
+    (config) => ({ command: 'uvx', args: ['--from', 'git+https://github.com/ausrine-labs/infoharmoni-speech-to-text', 'infoharmoni-speech-to-text-mcp'] })

@@ -1,0 +1,33 @@
+# Infoharmoni Speech-to-Text MCP server as a one-line install. Meant for the ROOT of its own public repository
+# (ausrine-labs/infoharmoni-speech-to-text), with stt_mcp.py, SKILL.md, README.md, llms.txt, docs.md,
+# smithery.yaml and glama.json beside it. Kept here, in the lab, beside the service it fronts; creating that
+# repository is a step for its owner.
+#
+#   uvx --from git+https://github.com/ausrine-labs/infoharmoni-speech-to-text infoharmoni-speech-to-text-mcp
+#
+# No dependencies: the server is standard library only.
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infoharmoni-speech-to-text-mcp"
+version = "0.1.0"
+description = "Infoharmoni Speech-to-Text as an MCP server: quote, then transcribe one audio file, $0.0015 a minute over x402. Returns the payment terms unpaid; never holds a key."
+readme = { text = "Infoharmoni Speech-to-Text as an MCP server over stdio. Two tools, quote_transcription(url) and transcribe(url, quote_id). Run: infoharmoni-speech-to-text-mcp.", content-type = "text/plain" }
+requires-python = ">=3.10"
+dependencies = []
+license = { text = "MIT" }
+keywords = ["mcp", "x402", "agents", "speech-to-text", "transcription", "whisper", "usdc"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+infoharmoni-speech-to-text-mcp = "stt_mcp:main"
+
+[tool.setuptools]
+py-modules = ["stt_mcp"]
