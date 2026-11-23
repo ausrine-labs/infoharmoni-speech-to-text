@@ -5,7 +5,7 @@ Pay-per-file speech-to-text for AI agents. Send the address of one audio file, g
 - Price: $0.0015 a minute, billed per second, minimum $0.005 a file. At most 60 minutes and 100 MB a file.
 - Free quote first: you are told the exact price before you pay. Refusals are free; a failed job is not settled.
 - Machine transcription: it can be wrong, especially names, numbers and Lithuanian. Nothing you send is kept.
-- Live service and full reference: https://vilijas-mac-mini.tailfe9c79.ts.net (`/llms.txt`, `/docs.md`; copies are in this repository).
+- Live service and full reference: https://api.infoharmoni.com/stt (`/llms.txt`, `/docs.md`; copies are in this repository).
 
 ## MCP server
 

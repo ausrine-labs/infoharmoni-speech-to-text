@@ -29,7 +29,7 @@ Claude Desktop, Cursor, or any MCP client:
 
     {"mcpServers": {"infoharmoni-speech-to-text": {"command": "python3", "args": ["/path/to/stt_mcp.py"]}}}
 
-STT_URL (default https://vilijas-mac-mini.tailfe9c79.ts.net) names the seller. MIT.
+STT_URL (default https://api.infoharmoni.com/stt) names the seller. MIT.
 """
 
 import base64
@@ -44,7 +44,7 @@ VERSION = "0.1.0"
 PROTOCOL = "2024-11-05"
 NAME = "infoharmoni-speech-to-text"
 TITLE = "Infoharmoni Speech-to-Text"
-BASE = (os.environ.get("STT_URL") or "https://vilijas-mac-mini.tailfe9c79.ts.net").rstrip("/")
+BASE = (os.environ.get("STT_URL") or "https://api.infoharmoni.com/stt").rstrip("/")
 QUOTE_PATH = "/v1/transcribe/quote"
 PATH = "/v1/transcribe"
 QUOTE_TIMEOUT = 300.0        # the seller fetches the file and measures it before it answers
