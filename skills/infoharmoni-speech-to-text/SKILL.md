@@ -6,7 +6,7 @@ compatibility: "Any agent that can make HTTP POSTs and, if its operator allows s
 metadata:
   author: infoharmoni
   version: "0.1.0"
-  homepage: "https://vilijas-mac-mini.tailfe9c79.ts.net"
+  homepage: "https://api.infoharmoni.com/stt"
   docs: "docs.md"
   contact: "ausrine@infoharmoni.com"
 ---
@@ -31,7 +31,7 @@ Do not use it for:
 
 ## How to call
 
-Base URL: `https://vilijas-mac-mini.tailfe9c79.ts.net`
+Base URL: `https://api.infoharmoni.com/stt`
 
 1. Quote (free). `POST /v1/transcribe/quote` with the audio: multipart field `file`, or the raw bytes, or JSON `{"url": "https://..."}` (a public http or https address, fetched once, no redirects). The answer has `quote_id`, `duration_seconds`, `billable_seconds` and `price`. Nothing is charged.
 2. Transcribe (paid). `POST /v1/transcribe?quote=<quote_id>` with the same file or url. Optional `&language=lt` (default: auto-detect). With no payment you get HTTP 402 with exactly the quoted price in the terms.

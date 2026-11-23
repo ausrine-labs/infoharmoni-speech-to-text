@@ -4,7 +4,7 @@
 > machine. No account, no key, no subscription: you pay in USDC over x402, per second of audio.
 > This is machine transcription: it can be wrong. Nothing you send is kept.
 
-Base URL: https://vilijas-mac-mini.tailfe9c79.ts.net
+Base URL: https://api.infoharmoni.com
 
 ## Price
 
@@ -17,19 +17,17 @@ Base URL: https://vilijas-mac-mini.tailfe9c79.ts.net
 
 ## Flow
 
-1. POST https://vilijas-mac-mini.tailfe9c79.ts.net/v1/transcribe/quote with the audio (multipart field `file`, or the raw bytes, or JSON {"url": "https://..."}).
+1. POST https://api.infoharmoni.com/stt/v1/transcribe/quote with the audio (multipart field `file`, or the raw bytes, or JSON {"url": "https://..."}).
    Free. Returns quote_id, duration_seconds, billable_seconds, price.
-2. POST https://vilijas-mac-mini.tailfe9c79.ts.net/v1/transcribe?quote=<quote_id> with the same file (or url). Answers 402 with exactly the quoted price.
-   Pay with any x402 client; the same request then returns the text. Optional: &language=lt (default: auto-detect).
+2. POST https://api.infoharmoni.com/stt/v1/transcribe?quote=<quote_id> with the same file (or url). Answers 402 with exactly the quoted price.
+   Pay with any x402 client (USDC on Base); the same request then returns the text. Here the payment settles first, on Base, and then the file is sent to the machine that transcribes it; the text comes back on the same request. If the transcription fails after the payment settled, the answer says so, carries the transaction in its `PAYMENT-RESPONSE` header, and you may send the same file once more, free, to `POST /stt/v1/transcribe/retry?quote=<quote_id>&tx=<hash>`. One payment buys one transcript. Pay in USDC on Base only. Optional: &language=lt (default: auto-detect).
 
 ## Endpoints
 
-- POST /v1/transcribe/quote  free   file or url in; duration, price and quote id out
-- POST /v1/transcribe        paid   402 at the quoted price; then text, language, duration_seconds, words_per_minute
-- GET  /health               free
-- GET  /stats                free   offered, attempted, settled, audio seconds and minutes, distinct visitors
-- GET  /llms.txt             free   this page
-- GET  /docs.md              free   the full reference
+- POST /stt/v1/transcribe/quote  free   file or url in; duration, price and quote id out
+- POST /stt/v1/transcribe        paid   402 at the quoted price; then text, language, duration_seconds, words_per_minute
+- GET  /stt/llms.txt             free   this page
+- GET  /stt/docs.md              free   the full reference
 
 ## Rules
 
@@ -37,8 +35,8 @@ Base URL: https://vilijas-mac-mini.tailfe9c79.ts.net
   not a promise), plus any queue wait. Set a client timeout of at least 15 minutes for a long file.
 - One job runs at a time; up to 3 wait. When the queue is full you get 503 with Retry-After, free, before any payment.
 - A quote lasts 15 minutes and is used once. The file you send in step 2 must be byte for byte the one you quoted.
-- Languages: auto, or a whisper code such as en, lt, de, fr, es, pl, ru, uk, lv, et. Full list in /docs.md.
+- Languages: auto, or a whisper code such as en, lt, de, fr, es, pl, ru, uk, lv, et. Full list in /stt/docs.md.
 - Audio and text are deleted when the answer is sent. Nothing is logged but counts.
 - Every answer says it is machine transcription (machine_transcription: true, and a notice).
 
-See https://vilijas-mac-mini.tailfe9c79.ts.net/docs.md for the full reference.
+See https://api.infoharmoni.com/stt/docs.md for the full reference.

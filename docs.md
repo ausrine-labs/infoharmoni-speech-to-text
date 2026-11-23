@@ -11,7 +11,7 @@ says so.
 
 ## Base URL
 
-`https://vilijas-mac-mini.tailfe9c79.ts.net`
+`https://api.infoharmoni.com`
 
 ## Price
 
@@ -45,18 +45,18 @@ as it is sent, automatic language detection, and a price quoted before you pay.
 
 The price depends on the file, and it must be known before you pay. So there are two steps.
 
-1. **Quote** (free). `POST /v1/transcribe/quote` with the file. The server reads its length, deletes the
+1. **Quote** (free). `POST /stt/v1/transcribe/quote` with the file. The server reads its length, deletes the
    file, and returns the length, the price and a `quote_id`. Nothing is charged.
-2. **Transcribe** (paid). `POST /v1/transcribe?quote=<quote_id>` with the same file. The server answers
+2. **Transcribe** (paid). `POST /stt/v1/transcribe?quote=<quote_id>` with the same file. The server answers
    `402 Payment Required` with x402 terms whose amount is exactly the quoted price. An x402 client signs the
    payment and repeats the request with the payment header; the server then transcribes and returns the text on that
-   same request. The payment settles only when the text is delivered. A failed or refused job is not settled.
+   same request. Here the payment settles first, on Base, and then the file is sent to the machine that transcribes it; the text comes back on the same request. If the transcription fails after the payment settled, the answer says so, carries the transaction in its `PAYMENT-RESPONSE` header, and you may send the same file once more, free, to `POST /stt/v1/transcribe/retry?quote=<quote_id>&tx=<hash>`. One payment buys one transcript. Pay in USDC on Base only.
 
 Pay in USDC on Base (eip155:8453). Solana USDC is also accepted when this server is configured for it; the
 402 terms list exactly what is accepted. The buyer's authorisation is valid for up to an hour, so it still holds
 when a long file finishes.
 
-## POST /v1/transcribe/quote
+## POST /stt/v1/transcribe/quote
 
 Send the audio one of three ways:
 
@@ -68,7 +68,7 @@ A URL must be a public http or https address. It is fetched once, with no redire
 private network are refused.
 
 ```
-curl -s -F file=@meeting.mp3 https://vilijas-mac-mini.tailfe9c79.ts.net/v1/transcribe/quote
+curl -s -F file=@meeting.mp3 https://api.infoharmoni.com/stt/v1/transcribe/quote
 ```
 
 ```json
@@ -90,9 +90,9 @@ curl -s -F file=@meeting.mp3 https://vilijas-mac-mini.tailfe9c79.ts.net/v1/trans
 }
 ```
 
-## POST /v1/transcribe
+## POST /stt/v1/transcribe
 
-`POST /v1/transcribe?quote=<quote_id>[&language=<code>]` with the same file (or the same `url`). The quote id may
+`POST /stt/v1/transcribe?quote=<quote_id>[&language=<code>]` with the same file (or the same `url`). The quote id may
 also be sent as the `X-Quote-Id` header.
 
 - Unpaid: `402`, with the terms in the `PAYMENT-REQUIRED` header (base64 JSON) and the same JSON in the body.
@@ -129,6 +129,14 @@ The request stays open until the text is ready. Timing on our machine, model loa
 plus any wait in the queue. A 60-minute English file can take about 8 minutes. Use a client timeout of at least 15 minutes
 for long files. This is measured, not promised.
 
+## POST /stt/v1/transcribe/retry
+
+Free. For a payment that settled but whose transcription failed (a `502`, `503` or `504` that carried a `PAYMENT-RESPONSE`
+header, or a `409 file_differs_from_quote`). `POST /stt/v1/transcribe/retry?quote=<quote_id>&tx=<transaction hash>` with
+the quoted file, the same as step 2. The transaction is read from Base: it must be a payment of exactly the quoted price
+to this service's address, mined after the quote. One payment buys one transcript, with one retry after a failed
+transcription. The answer is the same as the paid request's.
+
 ## Languages
 
 `language=auto` (the default) detects the language. Otherwise a whisper language code:
@@ -137,7 +145,7 @@ An unknown code is refused, free, with this list.
 
 ## Queue and busy
 
-One job runs at a time; up to 3 wait behind it. When the queue is full, `POST /v1/transcribe` answers
+One job runs at a time; up to 3 wait behind it. When the queue is full, `POST /stt/v1/transcribe` answers
 `503 busy` with `Retry-After`, before any payment is asked for.
 
 ## Refusals (all free, no payment is asked or settled)
@@ -162,21 +170,10 @@ Each refusal is `{"ok": false, "charged": false, "error": "<code>", "say": "<sen
   deleted when the answer is sent, or when a request fails or is cancelled. Temp files live in one private folder that is
   emptied when the service starts.
 - The text is never stored or logged.
-- A quote (its id, length, price and the file's sha256) is held in memory for 15 minutes, until used.
-- `/stats` has counts only. Visitors are counted as a keyed hash of address and User-Agent, with a random key made at
-  start and never written down; only a short piece of the hash is kept, in memory.
+- A quote (its id, length, price and the file's sha256, never the address you gave) is held for 15 minutes, until used, in
+  memory and in a small private file, so a restart does not lose a quote you have just paid for.
 
-## GET /health
 
-`{"ok": true, "ready": {...}, "busy": false, "queue_waiting": 0, ...}`. `ok` is false (503) when ffmpeg, ffprobe,
-whisper-cli or the model is missing.
-
-## GET /stats
-
-Aggregated counts since the process started: `offered` (a 402 with terms was sent), `attempted` (a payment header
-arrived), `settled` (paid and the text sent), `seconds` and `minutes` (audio billed on settled jobs), `quotes_made`,
-`refused_free` by reason, `busy_refused`, `failed_payments` by plain reason, and `distinct` visitors who were offered a price
-(overall and by kind of client, and how many came back on a later UTC day). No address, file, URL, quote id or text.
 
 ## Example (Python, x402 client)
 
@@ -188,16 +185,16 @@ from x402.http.clients import x402HttpxClient
 from x402.mechanisms.evm.exact import register_exact_evm_client
 from x402.mechanisms.evm.signers import EthAccountSigner
 
-BASE = "https://vilijas-mac-mini.tailfe9c79.ts.net"
+BASE = "https://api.infoharmoni.com"
 audio = open("meeting.mp3", "rb").read()          # raw bytes: safe to send twice (the 402, then the payment)
 
 async def main():
-    quote = httpx.post(BASE + "/v1/transcribe/quote", content=audio, timeout=300).json()
+    quote = httpx.post(BASE + "/stt/v1/transcribe/quote", content=audio, timeout=300).json()
     print("price", quote["price"], "for", quote["billable_seconds"], "seconds")
     client = x402Client()
     register_exact_evm_client(client, EthAccountSigner(Account.from_key(PRIVATE_KEY)))
     async with x402HttpxClient(client, timeout=1200) as http:
-        r = await http.post(BASE + "/v1/transcribe", params={"quote": quote["quote_id"]}, content=audio)
+        r = await http.post(BASE + "/stt/v1/transcribe", params={"quote": quote["quote_id"]}, content=audio)
     print(r.json()["text"])
 
 asyncio.run(main())
