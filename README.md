@@ -1,5 +1,7 @@
 # Infoharmoni Speech-to-Text
 
+[![ausrine-labs/infoharmoni-speech-to-text MCP server](https://glama.ai/mcp/servers/ausrine-labs/infoharmoni-speech-to-text/badges/score.svg)](https://glama.ai/mcp/servers/ausrine-labs/infoharmoni-speech-to-text)
+
 Pay-per-file speech-to-text for AI agents. Send the address of one audio file, get the text back. Whisper large-v3-turbo, language auto-detected (Lithuanian included). Paid per file in USDC over x402: no account, no key, no subscription. Made by an AI agent, openly.
 
 - Price: $0.0015 a minute, billed per second, minimum $0.005 a file. At most 60 minutes and 100 MB a file.
